@@ -1,0 +1,308 @@
+@import 'tailwindcss';
+
+/* Class-based dark mode, driven by components/theme-provider.tsx */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* --------------------------------------------------------------- tokens */
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-2: #f4f4f5;
+  --text: #09090b;
+  --muted: #71717a;
+  --border: #e4e4e7;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --accent-fg: #ffffff;
+  --glass: rgba(255, 255, 255, 0.72);
+  --shadow: 0 1px 2px rgb(9 9 11 / 0.04), 0 8px 24px -12px rgb(9 9 11 / 0.12);
+}
+
+.dark {
+  --bg: #09090b;
+  --surface: #111113;
+  --surface-2: #18181b;
+  --text: #fafafa;
+  --muted: #a1a1aa;
+  --border: #27272a;
+  --accent: #818cf8;
+  --accent-soft: #1e1b4b;
+  --accent-fg: #0b0b0f;
+  --glass: rgba(17, 17, 19, 0.68);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -16px rgb(0 0 0 / 0.8);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+
+  /* Self-hosted variable fonts (@fontsource). No third-party font requests,
+     so there is nothing to preconnect and nothing blocked by an ad blocker. */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: 'Playfair Display Variable', ui-serif, Georgia, 'Times New Roman', serif;
+
+  --shadow-card: var(--shadow);
+
+  --breakpoint-3xl: 100rem;
+}
+
+/* ---------------------------------------------------------------- base */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Keep the layout from jumping when the scrollbar appears. */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--muted) 35%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklab, var(--muted) 60%, transparent);
+    background-clip: content-box;
+  }
+}
+
+/* ------------------------------------------------------------ utilities */
+@layer utilities {
+  /* Subtle glassmorphism — used for the header, toolbars and overlays. */
+  .glass {
+    background-color: var(--glass);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .hairline {
+    border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Ambient background wash behind the hero. */
+  .ambient::before {
+    content: '';
+    position: absolute;
+    inset: -20% -10% auto -10%;
+    height: 32rem;
+    background:
+      radial-gradient(40rem 20rem at 20% 0%, color-mix(in oklab, var(--accent) 16%, transparent), transparent 70%),
+      radial-gradient(30rem 18rem at 80% 10%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
+    filter: blur(20px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  }
+
+  /* The reading toolbar writes these three custom properties on <html>; the
+     article below consumes them, so layout changes cost no re-render. */
+  .reader-frame {
+    max-width: var(--reader-width, 42rem);
+    margin-inline: auto;
+    transition: max-width 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* ------------------------------------------------- rendered markdown ---- */
+/* Every rule below targets markup emitted by lib/utils/markdown.ts. Author
+   HTML is escaped before rendering, so these selectors are the only tags that
+   can ever appear inside an article. */
+.markdown {
+  font-family: var(--reader-font, var(--font-serif));
+  font-size: var(--reader-size, 1.1875rem);
+  line-height: 1.75;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.markdown > * + * {
+  margin-top: 1.35em;
+}
+
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  scroll-margin-top: 6rem;
+}
+
+.markdown h2 {
+  font-size: 1.6em;
+  margin-top: 2em;
+}
+.markdown h3 {
+  font-size: 1.3em;
+  margin-top: 1.8em;
+}
+.markdown h4 {
+  font-size: 1.1em;
+  margin-top: 1.6em;
+}
+
+.markdown p {
+  text-wrap: pretty;
+}
+
+.markdown a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: opacity 150ms ease;
+}
+.markdown a:hover {
+  opacity: 0.75;
+}
+
+.markdown strong {
+  font-weight: 700;
+}
+.markdown em {
+  font-style: italic;
+}
+.markdown del {
+  opacity: 0.6;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.4em;
+}
+.markdown ul {
+  list-style: disc;
+}
+.markdown ol {
+  list-style: decimal;
+}
+.markdown li + li {
+  margin-top: 0.45em;
+}
+.markdown li::marker {
+  color: var(--muted);
+}
+
+.markdown blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.1em 0 0.1em 1.25em;
+  font-style: italic;
+  color: color-mix(in oklab, var(--text) 82%, transparent);
+}
+
+.markdown hr {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 2.5em 0;
+}
+
+.markdown .md-code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.85em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.15em 0.4em;
+}
+
+.markdown .md-pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1em 1.25em;
+  overflow-x: auto;
+  font-size: 0.86em;
+  line-height: 1.6;
+  position: relative;
+}
+.markdown .md-pre code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  white-space: pre;
+}
+.markdown .md-pre[data-lang]::before {
+  content: attr(data-lang);
+  position: absolute;
+  top: 0.55rem;
+  right: 0.85rem;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.markdown .md-figure {
+  margin: 2em 0;
+}
+.markdown .md-figure img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
