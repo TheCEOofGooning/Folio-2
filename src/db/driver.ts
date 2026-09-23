@@ -159,7 +159,12 @@ export class SqlDriver {
     const connectionString = options.connectionString ?? process.env.DATABASE_URL;
     if (!connectionString) {
       throw new DatabaseError(
-        "DATABASE_URL is not set. Copy `.env.example` to `.env.local`, or run `npm run dev:db` for the bundled local Postgres.",
+        "DATABASE_URL is not set. " +
+          "On Vercel: add it under Project > Settings > Environment Variables (the pooled Neon " +
+          "connection string) and then REDEPLOY — variables only apply to new deployments. " +
+          "Locally: run `npm run dev:db`, or copy `.env.example` to `.env.local`. " +
+          "This build stops here on purpose: deploying without a database would produce a site " +
+          "that errors on every page.",
         0,
       );
     }
